@@ -3,13 +3,22 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes';
 import { errorHandler } from './middleware/errorHandler';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());
+app.use(helmet());
 app.use(express.json());
+
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/userdb';
 
