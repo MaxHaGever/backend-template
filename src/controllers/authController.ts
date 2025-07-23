@@ -58,7 +58,8 @@ export const updatePassword = async (req:AuthenticateRequest, res: Response): Pr
         }
         const isMatch = await user?.comparePassword(oldPassword);
         if(!isMatch){
-            res.status(400)
+            res.status(400).json({message: 'Invalid old password'});
+            return;
         }
         user.password = newPassword;
         user.markModified('password');

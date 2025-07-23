@@ -12,7 +12,6 @@ let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
-  console.log('🧪 In-Memory Mongo URI:', mongoServer.getUri());
   await mongoose.connect(mongoServer.getUri());
 });
 
@@ -106,4 +105,38 @@ describe('Authentication API', () => {
         expect(loginAgainResponse.body).toHaveProperty('token');
         expect(loginAgainResponse.body).toHaveProperty('user.email', 'test@email.com');
     });
-  });
+    it('should not update password with incorrect old password', async () => {
+        const loginResponse = await request(app)
+            .post('/api/login')
+            .send({
+                email: 'test@email.com',
+                password: 'newpassword'
+            });
+        expect(loginResponse.status).toBe(200);
+        expect(loginResponse.body).toHaveProperty('token');
+        const token = loginResponse.body.token;
+        const response = await request(app)
+            .patch('/api/update-password')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                oldPassword: 'wrongpassword',
+                newPassword: 'newpassword'
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('message', 'Invalid old password');
+    });
+    it('should return 404 for non-existent user', async () => {
+        const token = jwt.sign({ userId: new mongoose.Types.ObjectId() }, JWT_SECRET, { expiresIn: '1h' });
+        const response = await request(app)
+            .patch('/api/update-password')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                oldPassword: 'anyPassword',
+                newPassword: 'newpassword'
+            });
+
+        expect(response.status).toBe(404);
+        expect(response.body).toHaveProperty('message', 'User not found');
+    });
+  });    
