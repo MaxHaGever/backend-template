@@ -1,12 +1,13 @@
 import { User } from '../models/User';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { generateToken } from '../utils/generateToken';
 import { AuthenticateRequest } from '../middleware/authMiddleware'; 
 
+
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
-export const register = async (req: Request, res: Response): Promise<void> => {
+export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { username, email, password } = req.body;
     
     try {
@@ -19,12 +20,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const token = generateToken(newUser._id.toString());
         res.status(201).json({ token, user: { id: newUser._id, username: newUser.username, email: newUser.email } });
     } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        next(error);
     }
 };
 
-export const login = async (req: Request, res: Response): Promise<void> => {
+export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { email, password } = req.body;
 
     try {
@@ -41,19 +41,18 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const token = generateToken(user._id.toString());
         res.status(200).json({ token, user: { id: user._id, username: user.username, email: user.email } });
     } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        next(error);
     }
 };
 
-export const updatePassword = async (req:AuthenticateRequest, res: Response): Promise<void> => {
+export const updatePassword = async (req:AuthenticateRequest, res: Response, next: NextFunction): Promise<void> => {
     const {oldPassword, newPassword} = req.body;
     const userId = req.userId;
 
     try {
         const user = await User.findById(userId);
         if(!user){
-            res.status(404).json({message: 'User not found'})
+            res.status(404).json({message: 'User not found'});
             return;
         }
         const isMatch = await user?.comparePassword(oldPassword);
@@ -67,7 +66,7 @@ export const updatePassword = async (req:AuthenticateRequest, res: Response): Pr
 
         res.status(200).json({message: 'Password updated'})
     } catch (error) {
-        res.status(500).json({message: 'Server error during password update'})
+        next(error);
     }
 } 
 
