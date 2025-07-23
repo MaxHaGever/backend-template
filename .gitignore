@@ -11,3 +11,14 @@ coverage/
 
 # system files
 .DS_Store
+
+# VSCode settings
+.vscode/
+
+# Jest cache
+jest-cache/
+jest-test-results.json
+
+# TypeScript cache
+*.tsbuildinfo
+
