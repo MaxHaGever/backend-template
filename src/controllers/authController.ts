@@ -61,11 +61,12 @@ export const updatePassword = async (req:AuthenticateRequest, res: Response): Pr
             res.status(400)
         }
         user.password = newPassword;
-        await user?.save;
-        
+        user.markModified('password');
+        await user?.save();
+
         res.status(200).json({message: 'Password updated'})
     } catch (error) {
-        res.status(500).json({message: 'Servor error during password update'})
+        res.status(500).json({message: 'Server error during password update'})
     }
 } 
 
