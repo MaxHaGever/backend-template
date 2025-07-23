@@ -1,0 +1,13 @@
+# compiled output
+dist/
+node_modules/
+
+# dotenv
+.env
+
+# test outputs
+coverage/
+*.log
+
+# system files
+.DS_Store
